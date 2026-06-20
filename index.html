@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Back & Shoulder Rehab</title>
+<style>
+  :root {
+    --bone: #EDE8DF;
+    --ink: #1C1A17;
+    --rust: #B5552E;
+    --moss: #5A6B4A;
+    --slate: #6E7378;
+    --line: #D2CABB;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { background: var(--bone); }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--ink);
+    background: var(--bone);
+    line-height: 1.4;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 0 18px 80px;
+  }
+  header {
+    padding: 32px 0 18px;
+    border-bottom: 2px solid var(--ink);
+    position: sticky; top: 0; background: var(--bone); z-index: 5;
+  }
+  .kicker {
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--rust); font-weight: 700; margin-bottom: 6px;
+  }
+  h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 30px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.05;
+  }
+  .meta { font-size: 13px; color: var(--slate); margin-top: 8px; }
+  .progress-wrap { margin-top: 16px; }
+  .bar { height: 8px; background: var(--line); border-radius: 0; overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--moss); transition: width .3s ease; }
+  .progress-label { font-size: 12px; color: var(--slate); margin-top: 6px; display: flex; justify-content: space-between; }
+
+  .day { margin-top: 26px; }
+  .day-head { display: flex; align-items: baseline; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .day-num {
+    font-family: Georgia, serif; font-size: 13px; font-weight: 700;
+    color: var(--rust); min-width: 26px;
+  }
+  .day-title { font-size: 16px; font-weight: 700; flex: 1; }
+  .day-tag {
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--slate); border: 1px solid var(--line); padding: 2px 7px;
+  }
+  .day-tag.after { color: var(--rust); border-color: var(--rust); }
+
+  ul { list-style: none; }
+  li {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 2px; border-bottom: 1px solid var(--line);
+    cursor: pointer; user-select: none;
+  }
+  li:last-child { border-bottom: none; }
+  .box {
+    flex-shrink: 0; width: 22px; height: 22px; border: 2px solid var(--ink);
+    margin-top: 1px; position: relative; transition: background .15s, border-color .15s;
+  }
+  li.done .box { background: var(--moss); border-color: var(--moss); }
+  li.done .box::after {
+    content: ''; position: absolute; left: 6px; top: 2px;
+    width: 6px; height: 11px; border: solid var(--bone);
+    border-width: 0 2.5px 2.5px 0; transform: rotate(45deg);
+  }
+  .ex-name { font-size: 15px; transition: color .15s; }
+  li.done .ex-name { color: var(--slate); text-decoration: line-through; }
+  .ex-dose { font-size: 13px; color: var(--slate); }
+
+  .note {
+    margin-top: 4px; font-size: 13px; color: var(--slate);
+    font-style: italic;
+  }
+  .reset {
+    margin-top: 40px; width: 100%; padding: 14px;
+    background: none; border: 1px solid var(--line); color: var(--slate);
+    font-size: 13px; letter-spacing: 0.05em; cursor: pointer;
+    font-family: inherit;
+  }
+  .reset:active { background: var(--line); }
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">One-side compensation chain</div>
+  <h1>Back &amp; Shoulder Rehab</h1>
+  <div class="meta">Weekly plan · layered on top of PT · 4+ run days</div>
+  <div class="progress-wrap">
+    <div class="bar"><span id="barFill"></span></div>
+    <div class="progress-label"><span id="pctLabel">0% done</span><span id="countLabel">0 / 0</span></div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<button class="reset" id="resetBtn">Reset all for a new week</button>
+
+<script>
+const plan = [
+  { num: "Daily", title: "Mobility base", tag: "every day", items: [
+    ["Cat-cow", "10 slow reps"],
+    ["Thread the needle", "6 / side"],
+    ["Open book", "6 / side"],
+    ["Chin tucks", "10 — offloads lev scap"],
+    ["Doorway pec stretch", "30 sec / side"],
+  ], note: "Do these as your pre-run warmup on run days." },
+
+  { num: "Mon", title: "Anchors A — serratus + lower trap", items: [
+    ["Wall slides", "12 × 3"],
+    ["Serratus punches (cable/band)", "12 × 3"],
+    ["Prone Y raises", "10 × 3"],
+    ["Banded face pulls", "15 × 3"],
+    ["Lat stretch on rail", "45 sec × 2 / side"],
+  ], note: "The serratus gap your PT isn't directly hitting." },
+
+  { num: "Tue", title: "Anti-rotation core", tag: "after run", after: true, items: [
+    ["Pallof press", "10 / side × 3"],
+    ["Bird dog", "8 / side × 3"],
+    ["Dead bug", "10 / side × 3"],
+    ["Suitcase carry (weak side)", "40 ft × 4"],
+  ], note: "Stops the erectors over-bracing on foot strike." },
+
+  { num: "Wed", title: "Hip + glute stability", tag: "after run", after: true, items: [
+    ["Single-leg RDL", "8 / side × 3"],
+    ["Single-leg glute bridge", "12 / side × 3"],
+    ["Banded side steps", "15 / side × 3"],
+    ["Clamshells", "15 / side × 2"],
+  ], note: "Downstream fix for the foot-strike flare." },
+
+  { num: "Thu", title: "Anchors B — scapular control", items: [
+    ["Scapular push-ups", "12 × 3"],
+    ["Bear plank protraction", "10 × 3"],
+    ["Wall angels", "10 × 3"],
+    ["Rows", "defer to PT's prescription"],
+    ["Pec minor + lat release (ball)", "60 sec / side"],
+  ], note: "Don't double up on rows — let PT set those." },
+
+  { num: "Fri", title: "Light — mobility only", items: [
+    ["Daily mobility base", "see top"],
+  ], note: "Let things recover before the weekend." },
+
+  { num: "Sat", title: "Anti-rotation + carries", tag: "after run", after: true, items: [
+    ["Pallof press", "10 / side × 3"],
+    ["Suitcase carry (weak side)", "40 ft × 4"],
+    ["Bird dog", "8 / side × 2"],
+  ] },
+
+  { num: "Sun", title: "Rest or mobility only", items: [
+    ["Daily mobility base (optional)", "see top"],
+  ], note: "Full rest is fine here." },
+];
+
+const app = document.getElementById('app');
+const state = {};
+let total = 0;
+
+plan.forEach((day, di) => {
+  const sec = document.createElement('section');
+  sec.className = 'day';
+  const tag = day.tag ? `<span class="day-tag ${day.after ? 'after' : ''}">${day.tag}</span>` : '';
+  sec.innerHTML = `<div class="day-head"><span class="day-num">${day.num}</span><span class="day-title">${day.title}</span>${tag}</div>`;
+  const ul = document.createElement('ul');
+  day.items.forEach((it, ii) => {
+    const id = `d${di}i${ii}`;
+    state[id] = false; total++;
+    const li = document.createElement('li');
+    li.dataset.id = id;
+    li.innerHTML = `<span class="box"></span><span style="flex:1"><span class="ex-name">${it[0]}</span> <span class="ex-dose">${it[1]}</span></span>`;
+    li.addEventListener('click', () => toggle(id, li));
+    ul.appendChild(li);
+  });
+  sec.appendChild(ul);
+  if (day.note) {
+    const n = document.createElement('div');
+    n.className = 'note';
+    n.textContent = day.note;
+    sec.appendChild(n);
+  }
+  app.appendChild(sec);
+});
+
+const barFill = document.getElementById('barFill');
+const pctLabel = document.getElementById('pctLabel');
+const countLabel = document.getElementById('countLabel');
+
+async function load() {
+  try {
+    const res = await window.storage.get('rehab-checks');
+    if (res && res.value) {
+      const saved = JSON.parse(res.value);
+      Object.keys(saved).forEach(id => {
+        if (id in state) {
+          state[id] = saved[id];
+          const li = document.querySelector(`[data-id="${id}"]`);
+          if (li && saved[id]) li.classList.add('done');
+        }
+      });
+    }
+  } catch (e) { /* no saved state yet */ }
+  updateProgress();
+}
+
+async function save() {
+  try { await window.storage.set('rehab-checks', JSON.stringify(state)); }
+  catch (e) { /* storage unavailable; session-only */ }
+}
+
+function toggle(id, li) {
+  state[id] = !state[id];
+  li.classList.toggle('done', state[id]);
+  updateProgress();
+  save();
+}
+
+function updateProgress() {
+  const done = Object.values(state).filter(Boolean).length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  barFill.style.width = pct + '%';
+  pctLabel.textContent = pct + '% done';
+  countLabel.textContent = `${done} / ${total}`;
+}
+
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  Object.keys(state).forEach(id => state[id] = false);
+  document.querySelectorAll('li.done').forEach(li => li.classList.remove('done'));
+  updateProgress();
+  await save();
+});
+
+load();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(() => console.log('SW registered'))
+    .catch(err => console.error('SW failed:', err));
+}
+</script>
+</body>
+</html>
